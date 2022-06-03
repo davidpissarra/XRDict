@@ -1,5 +1,5 @@
-from src.data import device, xrdict_collate_fn
-from src.evaluate import evaluate
+from xrdict.data import device, xrdict_collate_fn
+from xrdict.evaluate import evaluate
 from tqdm import tqdm
 import torch
 import gc

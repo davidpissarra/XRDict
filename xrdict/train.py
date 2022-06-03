@@ -15,6 +15,7 @@ def train(model, n_epochs, data, optimizer, batch_size=64):
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True, collate_fn=xrdict_collate_fn)
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=xrdict_collate_fn)
 
+    best_val_acc = 0
     for epoch in range(n_epochs):
         print(f'Running epoch {epoch+1}')
         train_loss, train_labels, train_preds = 0, list(), list()

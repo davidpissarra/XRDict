@@ -30,7 +30,7 @@ class XRDict(torch.nn.Module):
         self.fc = torch.nn.Linear(self.encoder.dim, self.embedding.embedding_dim)
 
     
-    def forward(self, x, lengths, causal, word_gt=None, mode='test'):
+    def forward(self, x, lengths, causal=False, word_gt=None, mode='test'):
         # sentence vectors: Tensor(batch_size, encoder_dim)      
         h0 = self.encoder('fwd', x=x, lengths=lengths, causal=causal)[0]
 

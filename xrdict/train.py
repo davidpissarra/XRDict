@@ -1,11 +1,11 @@
-from xrdict.data import device, xrdict_collate_fn
-from xrdict.evaluate import evaluate
+from src.data import device, xrdict_collate_fn
+from src.evaluate import evaluate
 from tqdm import tqdm
 import torch
 import gc
 
 
-def train(model, n_epochs, data, optimizer, batch_size=64):
+def train(model, n_epochs, data, optimizer, batch_size):
 
     model.to(device)
 
@@ -15,7 +15,7 @@ def train(model, n_epochs, data, optimizer, batch_size=64):
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True, collate_fn=xrdict_collate_fn)
     test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=xrdict_collate_fn)
 
-    best_val_acc = 0
+    best_val_acc = 0.
     for epoch in range(n_epochs):
         print(f'Running epoch {epoch+1}')
         train_loss, train_labels, train_preds = 0, list(), list()
@@ -44,7 +44,7 @@ def train(model, n_epochs, data, optimizer, batch_size=64):
             print(f'Validating epoch {epoch+1}\n')
             val_labels, val_preds = list(), list()
             for target_ids, def_ids, lens in tqdm(val_dataloader):
-                loss, _, indices = model(x=def_ids, lengths=lens, mode='test')
+                indices = model(x=def_ids, lengths=lens, mode='test')
                 predicted = indices[:, :100].detach().cpu().numpy().tolist()
                 val_labels.extend(target_ids.detach().cpu().numpy().tolist()) #
                 val_preds.extend(predicted)
@@ -57,11 +57,11 @@ def train(model, n_epochs, data, optimizer, batch_size=64):
             if val_acc_10 > best_val_acc:
                 print('-----BEST VALID ACCURACY-----')
                 best_val_acc = val_acc_10
-                torch.save(model, '../saves/model.pth')
+                torch.save(model, f'../saves/model_{epoch+1}.pth')
                 
                 test_labels, test_preds = list(), list()
                 for target_ids, def_ids, lens in tqdm(test_dataloader):
-                    indices = model()
+                    indices = model(x=def_ids, lengths=lens, mode='test')
                     predicted = indices[:, :1000].detach().cpu().numpy().tolist()
                     test_labels.extend(target_ids.detach().cpu().numpy().tolist()) #
                     test_preds.extend(predicted)
@@ -71,4 +71,4 @@ def train(model, n_epochs, data, optimizer, batch_size=64):
                 del test_labels, test_preds, lens
                 gc.collect()
         
-        return model
+    return model

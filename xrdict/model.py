@@ -6,14 +6,14 @@ from xlm.data.dictionary import Dictionary, BOS_WORD, EOS_WORD, PAD_WORD, UNK_WO
 
 
 class XRDict(torch.nn.Module):
-    def __init__(self, ckpt_path, vocab):
+    def __init__(self, xlmr_ckpt_path, vocab):
         super().__init__()
         
         self.loss = torch.nn.CrossEntropyLoss()
         self.embedding = torch.nn.Embedding.from_pretrained(vocab.id2vec)
         self.embedding.weight.requires_grad = False
 
-        reloaded = torch.load(ckpt_path)
+        reloaded = torch.load(xlmr_ckpt_path)
         self.params = AttrDict(reloaded['params'])
 
         self.dico = Dictionary(reloaded['dico_id2word'], reloaded['dico_word2id'], reloaded['dico_counts'])
@@ -29,16 +29,16 @@ class XRDict(torch.nn.Module):
 
         self.fc = torch.nn.Linear(self.encoder.dim, self.embedding.embedding_dim)
 
-    
+
     def forward(self, x, lengths, causal=False, word_gt=None, mode='test'):
-        # sentence vectors: Tensor(batch_size, encoder_dim)      
-        h0 = self.encoder('fwd', x=x, lengths=lengths, causal=causal)[0]
+        # sentence vectors: Tensor(batch_size, encoder_dim)
+        v_d = self.encoder('fwd', x=x, lengths=lengths, causal=causal)[0]
 
         # Tensor(batch_size, embedding_dim)
-        h0 = self.fc(h0)
+        e_d = self.fc(v_d)
 
         # score: Tensor(batch, vocab_size)
-        score = torch.mm(h0, self.embedding.weight.T)
+        score = torch.mm(e_d, self.embedding.weight.data.T)
 
         # sorted score index: Tensor(batch, vocab_size)
         _, word_ids = torch.sort(score, dim=1, descending=True)
@@ -47,4 +47,4 @@ class XRDict(torch.nn.Module):
             loss = self.loss(score, word_gt)
             return loss, score, word_ids
         elif mode == 'test':
-            return word_ids
+            return score, word_ids

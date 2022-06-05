@@ -159,7 +159,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-checkpoints/
-data/train_bpe.json
-data/vec_inuse.json
 saves/
+checkpoints/
+data/*.json
+data/*.txt
